@@ -1,7 +1,7 @@
 
 var locations = [];
 
-$(document).ready(function() {
+$(document).ready(async function() {
   const canvas = document.getElementById('canvas');
   const ctx = canvas.getContext('2d');
   ctx.fillStyle = 'black';
@@ -24,6 +24,20 @@ $(document).ready(function() {
   let mouseDown = 0;
 
   let traveling = false;
+
+  const images = [];
+
+  function addImageProcess(src) {
+    return new Promise((resolve, reject) => {
+      let img = new Image()
+      img.onload = () => resolve()
+      img.onerror = reject
+      img.src = src
+      images.push({image: img, width: 20, height: 20});
+    });
+  }
+
+  await addImageProcess('tree.svg');
 
   const firstNode = generateFirstNode();
   let selectedLocation = undefined;
@@ -175,6 +189,12 @@ $(document).ready(function() {
       drawFilledCircle(screenX + offsetScreenX + loc.x, screenY + offsetScreenY + loc.y, NODE_RADIUS, 'white');
     });
 
+    locations.forEach((loc, i) => {
+      loc.pois.forEach(p => {
+        ctx.drawImage(images[0].image, scale * (screenX + offsetScreenX + loc.x - (loc.r) + p.x - p.r), scale * (screenY + offsetScreenY + loc.y - (loc.r) + p.y - p.r), images[0].width * scale, images[0].height * scale);
+      });
+    });
+
     if (traveling) {
       player.location.neighbours.forEach((loc, i) => {
         drawFilledCircle(
@@ -253,22 +273,6 @@ $(document).ready(function() {
     const node = player.location;
     generateLocation(node);
     drawScene();
-  }
-
-  function degreesToRadians(degrees) {
-    return degrees * Math.PI / 180;
-  }
-
-  function generateNodeIndex() {
-    if ( typeof generateNodeIndex.counter == 'undefined' ) {
-        generateNodeIndex.counter = 0;
-    }
-
-    return ++generateNodeIndex.counter;
-  }
-
-  function generateNode(x, y, r) {
-    return { group: 'node', index: generateNodeIndex(), x, y, r, neighbours: [] };
   }
 
   function generateFirstNode() {

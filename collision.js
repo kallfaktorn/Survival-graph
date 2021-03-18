@@ -81,7 +81,52 @@ function generateLocation(n) {
 }
 
 function generateNode(x, y, r) {
-  return { group: 'node', index: generateNodeIndex(), x, y, r, neighbours: [] };
+  const nrOfTrees = Math.floor(Math.random() * 10);
+  const node = { group: 'node', index: generateNodeIndex(), x, y, r, neighbours: [], pois: [] };
+
+  // Add trees to node
+  for(let i = 0; i < nrOfTrees; i++) {
+    addPoiToNode(node);
+  }
+
+  return node;
+}
+
+function addPoiToNode(n) {
+  const nodeRadius = n.r;
+  const poiRadius = 10;
+  const rInterval = (nodeRadius) * 2;
+  let xIntervals = [...Array(rInterval).keys()].map(i => i + 1);
+  let yIntervals = [...Array(rInterval).keys()].map(i => i + 1);
+
+  let intervalsXY = [];
+  xIntervals.forEach(x => {
+    yIntervals.forEach(y => {
+      if (circleInsideCircle(n, {x, y, r: poiRadius})) {
+        intervalsXY.push({x, y});
+      }
+    });
+  });
+
+  while (intervalsXY.length > 0) {
+    const randomXYIndex = Math.floor(Math.random() * intervalsXY.length);
+    const intervalXY = intervalsXY.splice(randomXYIndex, 1);
+    const randomCircle = {x: intervalXY[0].x, y: intervalXY[0].y, r: poiRadius};
+
+    let collision = false;
+
+    for (var i = 0; i < n.pois.length; i++) {
+      if (circleCollideCircle(randomCircle, n.pois[i])) {
+        collision = true;
+        //break;
+      }
+    }
+
+    if (collision === false) {
+      n.pois.push(randomCircle);
+      break;
+    }
+  }
 }
 
 function generateNodeIndex() {
@@ -120,6 +165,20 @@ function edgeCollideCircle(x1, y1, x2, y2, c) {
     return true;
   }
   return false;
+}
+
+function circleInsideCircle(c1, c2) {
+  let distX = c1.r - c2.x;
+  let distY = c1.r - c2.y;
+  const len = Math.sqrt( (distX * distX) + (distY * distY) );
+  return len < (c1.r - c2.r);
+}
+
+function circleCollideCircle(c1, c2) {
+  let distX = c1.x - c2.x;
+  let distY = c1.y - c2.y;
+  const len = Math.sqrt( (distX * distX) + (distY * distY) );
+  return len < (c1.r + c2.r);
 }
 
 function pointOnLine(x1, y1, x2, y2, closestX, closestY) {
